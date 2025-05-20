@@ -84,129 +84,103 @@
                         <div class="col-md-8">
                             <h1>Entendendo a economia de IA</h1>
                             <div class="info">
+                                <strong style="font-family:CMSS; font-size:120%">João Valle</strong>
     <p style="font-family:CMSS; font-size:120%">Maio, 2025</p>
 
 
 </div>
 
-<h2 id="recurrent-neural-networks">Visão geral</h2>
-<!-- <p>Humans don’t start their thinking from scratch every second. As you read this essay, you understand each word based on your understanding of previous words. You don’t throw everything away and start thinking from scratch again. Your thoughts have persistence.</p>
-<p>Traditional neural networks can’t do this, and it seems like a major shortcoming. For example, imagine you want to classify what kind of event is happening at every point in a movie. It’s unclear how a traditional neural network could use its reasoning about previous events in the film to inform later ones.</p>
-<p>Recurrent neural networks address this issue. They are networks with loops in them, allowing information to persist.</p>
-<div style="width:11.8%; margin-left:auto; margin-right:auto; margin-bottom:5px; margin-top:17px;">
-<img src="img/RNN-rolled.png" alt>
-</div>
-<div class="caption" style="margin-bottom:20px;">
-<strong>Recurrent Neural Networks have loops.</strong>
-</div>
-<p>In the above diagram, a chunk of neural network, <span class="math">\(A\)</span>, looks at some input <span class="math">\(x_t\)</span> and outputs a value <span class="math">\(h_t\)</span>. A loop allows information to be passed from one step of the network to the next.</p>
-<p>These loops make recurrent neural networks seem kind of mysterious. However, if you think a bit more, it turns out that they aren’t all that different than a normal neural network. A recurrent neural network can be thought of as multiple copies of the same network, each passing a message to a successor. Consider what happens if we unroll the loop:</p>
-<div style="width:70%; margin-left:auto; margin-right:auto; margin-bottom:5px; margin-top:17px;">
-<img src="img/RNN-unrolled.png" alt="An unrolled recurrent neural network.">
-</div>
-<div class="caption" style="margin-bottom:20px;">
-<strong>An unrolled recurrent neural network.</strong>
-</div>
-<p>This chain-like nature reveals that recurrent neural networks are intimately related to sequences and lists. They’re the natural architecture of neural network to use for such data.</p>
-<p>And they certainly are used! In the last few years, there have been incredible success applying RNNs to a variety of problems: speech recognition, language modeling, translation, image captioning… The list goes on. I’ll leave discussion of the amazing feats one can achieve with RNNs to Andrej Karpathy’s excellent blog post, <a href="http://karpathy.github.io/2015/05/21/rnn-effectiveness/">The Unreasonable Effectiveness of Recurrent Neural Networks</a>. But they really are pretty amazing.</p>
-<p>Essential to these successes is the use of “LSTMs,” a very special kind of recurrent neural network which works, for many tasks, much much better than the standard version. Almost all exciting results based on recurrent neural networks are achieved with them. It’s these LSTMs that this essay will explore.</p>
-<h2 id="the-problem-of-long-term-dependencies">The Problem of Long-Term Dependencies</h2>
-<p>One of the appeals of RNNs is the idea that they might be able to connect previous information to the present task, such as using previous video frames might inform the understanding of the present frame. If RNNs could do this, they’d be extremely useful. But can they? It depends.</p>
-<p>Sometimes, we only need to look at recent information to perform the present task. For example, consider a language model trying to predict the next word based on the previous ones. If we are trying to predict the last word in “the clouds are in the <em>sky</em>,” we don’t need any further context – it’s pretty obvious the next word is going to be sky. In such cases, where the gap between the relevant information and the place that it’s needed is small, RNNs can learn to use the past information.</p>
-<div style="width:50%; margin-left:auto; margin-right:auto; margin-bottom:17px; margin-top:17px;">
-<img src="img/RNN-shorttermdepdencies.png" alt>
-</div>
-<p>But there are also cases where we need more context. Consider trying to predict the last word in the text “I grew up in France… I speak fluent <em>French</em>.” Recent information suggests that the next word is probably the name of a language, but if we want to narrow down which language, we need the context of France, from further back. It’s entirely possible for the gap between the relevant information and the point where it is needed to become very large.</p>
-<p>Unfortunately, as that gap grows, RNNs become unable to learn to connect the information.</p>
-<div style="width:65.2%; margin-left:auto; margin-right:auto; margin-bottom:17px; margin-top:17px;">
-<img src="img/RNN-longtermdependencies.png" alt="Neural networks struggle with long term dependencies.">
-</div>
-<p>In theory, RNNs are absolutely capable of handling such “long-term dependencies.” A human could carefully pick parameters for them to solve toy problems of this form. Sadly, in practice, RNNs don’t seem to be able to learn them. The problem was explored in depth by <a href="http://people.idsia.ch/~juergen/SeppHochreiter1991ThesisAdvisorSchmidhuber.pdf">Hochreiter (1991) [German]</a> and <a href="http://www-dsi.ing.unifi.it/~paolo/ps/tnn-94-gradient.pdf">Bengio, et al. (1994)</a>, who found some pretty fundamental reasons why it might be difficult.</p>
-<p>Thankfully, LSTMs don’t have this problem!</p>
-<h2 id="lstm-networks">LSTM Networks</h2>
-<p>Long Short Term Memory networks – usually just called “LSTMs” – are a special kind of RNN, capable of learning long-term dependencies. They were introduced by <a href="http://www.bioinf.jku.at/publications/older/2604.pdf">Hochreiter &amp; Schmidhuber (1997)</a>, and were refined and popularized by many people in following work.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> They work tremendously well on a large variety of problems, and are now widely used.</p>
-<p>LSTMs are explicitly designed to avoid the long-term dependency problem. Remembering information for long periods of time is practically their default behavior, not something they struggle to learn!</p>
-<p>All recurrent neural networks have the form of a chain of repeating modules of neural network. In standard RNNs, this repeating module will have a very simple structure, such as a single tanh layer.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:15px; margin-top:15px;">
-<img src="img/LSTM3-SimpleRNN.png" alt>
-<div class="caption" style="margin-bottom:10px;">
-<strong>The repeating module in a standard RNN contains a single layer.</strong>
-</div>
-</div>
-<p>LSTMs also have this chain like structure, but the repeating module has a different structure. Instead of having a single neural network layer, there are four, interacting in a very special way.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:15px; margin-top:15px;">
-<img src="img/LSTM3-chain.png" alt="A LSTM neural network.">
-<div class="caption" style="margin-bottom:10px;">
-<strong>The repeating module in an LSTM contains four interacting layers.</strong>
-</div>
-</div>
-<p>Don’t worry about the details of what’s going on. We’ll walk through the LSTM diagram step by step later. For now, let’s just try to get comfortable with the notation we’ll be using.</p>
-<div style="width:70%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM2-notation.png" alt>
-</div>
-<p>In the above diagram, each line carries an entire vector, from the output of one node to the inputs of others. The pink circles represent pointwise operations, like vector addition, while the yellow boxes are learned neural network layers. Lines merging denote concatenation, while a line forking denote its content being copied and the copies going to different locations. </p>
-<h2 id="the-core-idea-behind-lstms">The Core Idea Behind LSTMs</h2>
-<p>The key to LSTMs is the cell state, the horizontal line running through the top of the diagram.</p>
-<p>The cell state is kind of like a conveyor belt. It runs straight down the entire chain, with only some minor linear interactions. It’s very easy for information to just flow along it unchanged.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-C-line.png" alt>
-</div>
-<p>The LSTM does have the ability to remove or add information to the cell state, carefully regulated by structures called gates.</p>
-<p>Gates are a way to optionally let information through. They are composed out of a sigmoid neural net layer and a pointwise multiplication operation.</p>
-<div style="width:12%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-gate.png" alt>
-</div>
-<p>The sigmoid layer outputs numbers between zero and one, describing how much of each component should be let through. A value of zero means “let nothing through,” while a value of one means “let everything through!”</p>
-<p>An LSTM has three of these gates, to protect and control the cell state.</p>
-<h2 id="step-by-step-lstm-walk-through">Step-by-Step LSTM Walk Through</h2>
-<p>The first step in our LSTM is to decide what information we’re going to throw away from the cell state. This decision is made by a sigmoid layer called the “forget gate layer.” It looks at <span class="math">\(h_{t-1}\)</span> and <span class="math">\(x_t\)</span>, and outputs a number between <span class="math">\(0\)</span> and <span class="math">\(1\)</span> for each number in the cell state <span class="math">\(C_{t-1}\)</span>. A <span class="math">\(1\)</span> represents “completely keep this” while a <span class="math">\(0\)</span> represents “completely get rid of this.”</p>
-<p>Let’s go back to our example of a language model trying to predict the next word based on all the previous ones. In such a problem, the cell state might include the gender of the present subject, so that the correct pronouns can be used. When we see a new subject, we want to forget the gender of the old subject.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-focus-f.png" alt>
-</div>
-<p>The next step is to decide what new information we’re going to store in the cell state. This has two parts. First, a sigmoid layer called the “input gate layer” decides which values we’ll update. Next, a tanh layer creates a vector of new candidate values, <span class="math">\(\tilde{C}_t\)</span>, that could be added to the state. In the next step, we’ll combine these two to create an update to the state.</p>
-<p>In the example of our language model, we’d want to add the gender of the new subject to the cell state, to replace the old one we’re forgetting.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-focus-i.png" alt>
-</div>
-<p>It’s now time to update the old cell state, <span class="math">\(C_{t-1}\)</span>, into the new cell state <span class="math">\(C_t\)</span>. The previous steps already decided what to do, we just need to actually do it.</p>
-<p>We multiply the old state by <span class="math">\(f_t\)</span>, forgetting the things we decided to forget earlier. Then we add <span class="math">\(i_t*\tilde{C}_t\)</span>. This is the new candidate values, scaled by how much we decided to update each state value.</p>
-<p>In the case of the language model, this is where we’d actually drop the information about the old subject’s gender and add the new information, as we decided in the previous steps.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-focus-C.png" alt>
-</div>
-<p>Finally, we need to decide what we’re going to output. This output will be based on our cell state, but will be a filtered version. First, we run a sigmoid layer which decides what parts of the cell state we’re going to output. Then, we put the cell state through <span class="math">\(\tanh\)</span> (to push the values to be between <span class="math">\(-1\)</span> and <span class="math">\(1\)</span>) and multiply it by the output of the sigmoid gate, so that we only output the parts we decided to.</p>
-<p>For the language model example, since it just saw a subject, it might want to output information relevant to a verb, in case that’s what is coming next. For example, it might output whether the subject is singular or plural, so that we know what form a verb should be conjugated into if that’s what follows next.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-focus-o.png" alt>
-</div>
-<h2 id="variants-on-long-short-term-memory">Variants on Long Short Term Memory</h2>
-<p>What I’ve described so far is a pretty normal LSTM. But not all LSTMs are the same as the above. In fact, it seems like almost every paper involving LSTMs uses a slightly different version. The differences are minor, but it’s worth mentioning some of them.</p>
-<p>One popular LSTM variant, introduced by <a href="ftp://ftp.idsia.ch/pub/juergen/TimeCount-IJCNN2000.pdf">Gers &amp; Schmidhuber (2000)</a>, is adding “peephole connections.” This means that we let the gate layers look at the cell state.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-var-peepholes.png" alt>
-</div>
-<p>The above diagram adds peepholes to all the gates, but many papers will give some peepholes and not others.</p>
-<p>Another variation is to use coupled forget and input gates. Instead of separately deciding what to forget and what we should add new information to, we make those decisions together. We only forget when we’re going to input something in its place. We only input new values to the state when we forget something older.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-var-tied.png" alt>
-</div>
-<p>A slightly more dramatic variation on the LSTM is the Gated Recurrent Unit, or GRU, introduced by <a href="http://arxiv.org/pdf/1406.1078v3.pdf">Cho, et al. (2014)</a>. It combines the forget and input gates into a single “update gate.” It also merges the cell state and hidden state, and makes some other changes. The resulting model is simpler than standard LSTM models, and has been growing increasingly popular.</p>
-<div style="width:90%; margin-left:auto; margin-right:auto; margin-bottom:8px; margin-top:8px;">
-<img src="img/LSTM3-var-GRU.png" alt="A gated recurrent unit neural network.">
-</div>
-<p>These are only a few of the most notable LSTM variants. There are lots of others, like Depth Gated RNNs by <a href="http://arxiv.org/pdf/1508.03790v2.pdf">Yao, et al. (2015)</a>. There’s also some completely different approach to tackling long-term dependencies, like Clockwork RNNs by <a href="http://arxiv.org/pdf/1402.3511v1.pdf">Koutnik, et al. (2014)</a>.</p>
-<p>Which of these variants is best? Do the differences matter? <a href="http://arxiv.org/pdf/1503.04069.pdf">Greff, et al. (2015)</a> do a nice comparison of popular variants, finding that they’re all about the same. <a href="http://jmlr.org/proceedings/papers/v37/jozefowicz15.pdf">Jozefowicz, et al. (2015)</a> tested more than ten thousand RNN architectures, finding some that worked better than LSTMs on certain tasks.</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>Earlier, I mentioned the remarkable results people are achieving with RNNs. Essentially all of these are achieved using LSTMs. They really work a lot better for most tasks!</p>
-<p>Written down as a set of equations, LSTMs look pretty intimidating. Hopefully, walking through them step by step in this essay has made them a bit more approachable.</p>
-<p>LSTMs were a big step in what we can accomplish with RNNs. It’s natural to wonder: is there another big step? A common opinion among researchers is: “Yes! There is a next step and it’s attention!” The idea is to let every step of an RNN pick information to look at from some larger collection of information. For example, if you are using an RNN to create a caption describing an image, it might pick a part of the image to look at for every word it outputs. In fact, <a href="http://arxiv.org/pdf/1502.03044v2.pdf">Xu, <em>et al.</em> (2015)</a> do exactly this – it might be a fun starting point if you want to explore attention! There’s been a number of really exciting results using attention, and it seems like a lot more are around the corner…</p>
-<p>Attention isn’t the only exciting thread in RNN research. For example, Grid LSTMs by <a href="http://arxiv.org/pdf/1507.01526v1.pdf">Kalchbrenner, <em>et al.</em> (2015)</a> seem extremely promising. Work using RNNs in generative models – such as <a href="http://arxiv.org/pdf/1502.04623.pdf">Gregor, <em>et al.</em> (2015)</a>, <a href="http://arxiv.org/pdf/1506.02216v3.pdf">Chung, <em>et al.</em> (2015)</a>, or <a href="http://arxiv.org/pdf/1411.7610v3.pdf">Bayer & Osendorfer (2015)</a>  – also seems very interesting. The last few years have been an exciting time for recurrent neural networks, and the coming ones promise to only be more so!</p>
-<h2 id="acknowledgments">Acknowledgments</h2>
-<p>I’m grateful to a number of people for helping me better understand LSTMs, commenting on the visualizations, and providing feedback on this post.</p>
-<p>I’m very grateful to my colleagues at Google for their helpful feedback, especially <a href="http://research.google.com/pubs/OriolVinyals.html">Oriol Vinyals</a>, <a href="http://research.google.com/pubs/GregCorrado.html">Greg Corrado</a>, <a href="http://research.google.com/pubs/JonathonShlens.html">Jon Shlens</a>, <a href="http://people.cs.umass.edu/~luke/">Luke Vilnis</a>, and <a href="http://www.cs.toronto.edu/~ilya/">Ilya Sutskever</a>. I’m also thankful to many other friends and colleagues for taking the time to help me, including <a href="https://www.linkedin.com/pub/dario-amodei/4/493/393">Dario Amodei</a>, and <a href="http://cs.stanford.edu/~jsteinhardt/">Jacob Steinhardt</a>. I’m especially thankful to <a href="http://www.kyunghyuncho.me/">Kyunghyun Cho</a> for extremely thoughtful correspondence about my diagrams.</p>
-<p>Before this post, I practiced explaining LSTMs during two seminar series I taught on neural networks. Thanks to everyone who participated in those for their patience with me, and for their feedback.</p> -->
+<h2 id="economia-ia">Introdução</h2>
+<p>A economia da IA é tão complexa quanto qualquer outra economia. Para facilitar, vamos separar em camadas: pesquisa, indústria, mercado financeiro e governo. O centro de toda economia de IA começa na pesquisa e vai trafegando para camadas mais externas até um impacto nacional/global, representado pelo governo.</p>
+<div style="text-align: center;">
+    <img src="img/economia_ia.png" alt="" style="width:600px;">
+  </div>
+  <div class="caption" style="text-align: center; margin-bottom: 20px;">
+    <strong>Camadas da economida de IA.</strong>
+  </div>
 
+<h2 id="pesquisa">Pesquisa</h2>
+<p>Aqui vamos transitar por estas quatro camadas e entender como a IA é impactada e impacta cada uma delas. Vamos começar pela camada mais interna, o núcleo da economia de IA: a pesquisa. </p>
+<p>Temos que entender que IA nada mais é que um fruto de extensa pesquisa. Antes de existir <a href="https://chatgpt.com/">ChatGPT</a>, <a href="https://chat.deepseek.com">DeepSeek</a> e, até mesmo, antes de existir computadores pessoais, a pesquisa de IA já existia. Em 1956, os pesquisadores que participaram na <a href="https://en.wikipedia.org/wiki/Dartmouth_workshop">conferência de Dartmouth</a> decidiram dar um nome para as pesquisas que estavam fazendo na época e, evidentemente, chamaram-a de “Inteligência Artificial”. Com o passar dos anos, a pesquisa em IA se tornou cada vez mais popular e deu frutos aos diversos produtos que conhecemos hoje (nem preciso citar devido a popularidade). O que vemos hoje nada mais é do que aplicação em larga escala de ideias que começaram com toy-problems e se validaram com o tempo. </p>
+<div style="text-align: center;">
+    <img src="img/dartmouth.png" alt="" style="width:600px;">
+  </div>
+  <div class="caption" style="text-align: center; margin-bottom: 20px;">
+    <strong>Divisão da pesquisa em IA.</strong>
+  </div>
+<p>Com a validação dessas ideias e a evidência do seu potencial, a IA começou a receber dinheiro privado para pesquisa e, surpreendentemente, as empresas começaram a se tornar um centro de pesquisa importante assim como as universidades, que já faziam pesquisas na área. Isso resultou em uma particularidade na área de IA, onde pesquisadores de universidades e empresas são autores de artigos de grande impacto. Dois exemplos ilustram bem esse cenário: o paper que lançou a arquitetura transformers para o mundo, “<a href="https://arxiv.org/pdf/1706.03762">Attention is all you need</a>” possuem autores do Google e da Universidade de Toronto; e o artigo mais citado do mundo “<a href="https://arxiv.org/pdf/1412.6980">Adam: a method for stochastic optimization</a>” possuem autores da Universidade de Toronto, Universidade de Amsterdam e OpenAI. 
+</p>
+<div style="text-align: center;">
+    <img src="img/pesquisa_img.png" alt="" style="width:600px;">
+  </div>
+  <div class="caption" style="text-align: center; margin-bottom: 20px;">
+    <strong>Divisão da pesquisa em IA.</strong>
+  </div>
+<div style="text-align: center;">
+    <img src="img/attention_cover.png" alt="" style="width:600px;">
+  </div>
+  <div class="caption" style="text-align: center; margin-bottom: 20px;">
+    <strong>Artigo que lançou a rede neural Transformers.</strong>
+  </div>
+<div style="text-align: center;">
+    <img src="img/adam_cover.png" alt="" style="width:600px;">
+  </div>
+  <div class="caption" style="text-align: center; margin-bottom: 20px;">
+    <strong>Artigo que criou o Adam.</strong>
+  </div>
+<p>A pesquisa é o motor essencial para as aplicações do mundo real. Todas as ferramentas de IA que você tem acesso hoje são fruto de alguma descoberta científica do passado. Afinal, o ChatGPT usufruiu dos conhecimentos de processamento de linguagem natural, e arquitetura de redes neurais como Transformers.</p>
+
+<h2 id="industria">Indústria</h2>
+<p>Para entender esta camada, vou usar um exemplo menos abstrato: a energia nuclear. As descobertas da física nuclear, na época de ouro da física moderna, possibilitaram o surgimento de inúmeras tecnologias, onde a mais recorrente no nosso cotidiano é a energia nuclear. Para a população usufruir da energia elétrica gerada por fissão nuclear, precisa ter uma infraestrutura gigante: usinas nucleares e um sistema de distribuição de energia. E foi assim que uma descobertas científicas (física nuclear) se transformaram em um produto para a população (a energia elétrica). 
+</p>
+<div style="text-align: center;">
+<img src="img/energia_nuclear.png" alt="" style="width:600px;">
+</div>
+<div class="caption" style="text-align: center; margin-bottom: 20px;">
+<strong>Esquema da indústria de energia nuclear.</strong>
+</div>
+<p>Exatamente a mesma coisa acontece na IA, descobertas científicas (redes neurais, otimização, backpropagation) viram produtos para o consumidor final (ChatGPT, DeepSeek). Uma infraestrutura complexa foi erguida para que estas ideias se tornem produtos, visto que os produtos se modificam rapidamente e estão presentes em inúmeros setores. 
+</p>
+<p>O ecossistema da indústria de IA se organiza em quatro subcamadas: produtos para cliente final, fornecedores de APIs, fornecedores de infraestrutura, e fornecedores de hardware. 
+</p>
+<div style="text-align: center;">
+<img src="img/industria_equema.png" alt="" style="width:600px;">
+</div>
+<div class="caption" style="text-align: center; margin-bottom: 20px;">
+<strong>Camadas da indústria.</strong>
+</div>
+<p>A subcamada dos produtos finais é a mais superficial e você tem contato diário. São representados por websites famosos, como ChatGPT, Germini, DeepSeek, Perplexity; e outras aplicações não tão famosas por usarem AI, como PhotoShop, Youtube, Duolingo, Walmart, etc. É raro uma empresa que não use IA hoje em dia. O Duolingo, por exemplo, usa IA para adaptar lições para cada perfil de aluno. O YouTube usa IA para recomendação de vídeos. Walmart usa IA para analisar a demanda dos produtos e tomada de decisão. Podemos dizer que as grandes empresas estão presentes nessa subcamada, mesmo aquelas que não parecem ser alimentadas por IA. </p>
+<p>Nem todas essas empresas desenvolvem seus próprios modelos de IA do zero. A grande maioria modelos pré-treinados disponíveis em sites como HuggingFace e OpenAI para desenvolver seu produto final. E aqui chegamos na segunda subcamada da indústria: fornecedores de API. Modelos de IA precisam ser treinados com um grande volume de dados e com hiperparâmetros ajustados para que sejam eficientes nas suas respectivas tarefas. Não é qualquer empresa que consegue treinar um GPT. Por isso, a grande maioria das empresas usam APIs que fornecem modelos já treinados para serem inseridos nas aplicações sem preocupações desnecessárias. Existem inúmeros fornecedores de modelos e APIs, mas o mais famoso é HuggingFace devido ao vasto banco de modelos gratuitos.</p>
+<p>A terceira subcamada é representada pelos fornecedores de infraestrutura. Seu principal papel fornece o poder computacional e de armazenamento para as subcamadas subsequentes. Também são conhecidas como serviços de nuvem, representado pela AWS, Google Cloud Platform e Azure. Esta subcamada é essencial para o funcionamento dos serviços digitais como um todo, não exclusivamente das IAs, visto que a terceirização de infraestrutura se tornou um padrão da indústria de tecnologia. Para o caso das IAs, o serviço de nuvem é uma necessidade básica, pois a natureza da IA exige um elevado consumo de poder computacional e necessidades de armazenamento de dados.
+</p>
+<p>A última subcamada é a responsável por fornecer todo o poder computacional (GPU, processador, memória, etc.). Como citado anteriormente, para treinar um modelo de IA precisa de um poder computacional elevado, em especial computadores capazes de lidar com paralelização. Normalmente GPUs ou TPUs são responsáveis por este tipo de computação. Quanto mais eficiente (menor uso de energia) e mais rápido (maior poder de paralelização), modelos maiores e mais complexos podem surgir, como o GPT. Esta velocidade se reflete em todo o ecossistema do setor da IA, impactando todas as subcamadas da indústria. A empresa mais dominante nessa subcamada, sem sombra de dúvidas, é a NVIDIA. Não é à toa que é uma das empresas mais valiosas atualmente. </p>
+
+<h2 id="mercado">Mercado financeiro</h2>
+
+<p>Todos os setores da economia estão, de certo modo, influenciados pelo ecossistema financeiro, com seus inúmeros produtos financeiros que modelam a economia como um todo. Em especial o setor de IA, que possui inúmeras empresas de capital aberto (empresas que possuem parte de suas ações no mercado financeiro). Alguns exemplos já foram citados aqui, como: Alphabet (Google), NVIDIA, Amazon, etc. Elas deixam de depender somente do poder aquisitivo do cliente e agora dependem de interesses e expectativas dos investidores. 
+</p>
+<p>Mas por que uma empresa abriria o capital? Existem alguns bons motivos para tornar uma empresa de capital aberto. O primeiro é a arrecadação de capital, onde consegue mais dinheiro de investidores do mercado de ações e, com mais dinheiro, maior o potencial de crescimento da empresa. Outro grande fator é a liquidez, fica mais fácil comprar parte da empresa ou vender sua participação na empresa. Muitas vezes, os investidores “anjos” recuperam o investimento inicial vendo sua participação quando a empresa abre capital. Também, pode-se usar as ações da empresa como moeda de troca e fazer aquisições de outras empresas com pagamento através de ações, ao invés de usar dinheiro real. E, outro grande motivo, é a transparência e imagem da empresa. Quando uma empresa é aberta o capital necessariamente precisa mostrar relatórios semestrais ou trimestrais sobre os dados internos da empresa. Com isso a empresa fica mais transparente e confiabilidade da empresa. São estes os motivos que fizeram a Alphabet (Google), Amazon e outras empresas relevantes no setor da IA se exporem no mercado financeiro. </p>
+<div style="text-align: center;">
+<img src="img/capital_aberto.png" alt="" style="width:600px;">
+</div>
+<div class="caption" style="text-align: center; margin-bottom: 20px;">
+<strong>Razões para abrir o capital.</strong>
+</div>
+<p>Nem tudo são flores, a volatilidade é uma característica marcante nos ativos de IA. Sendo um setor não tão essencial quanto energia e alimentação, ela pode valorizar abruptamente quanto decair facilmente de acordo com as expectativas dos investidores. O que tornou um setor altamente dependente de inovação. A história da IA no mercado financeiro já mostrou essa oscilação entre expectativas das novas descobertas, com muita injeção de dinheiro, e decepções da tecnologia, marcada por seca de financiamentos. Em específico, a IA passou por dois invernos, de 1974 até 1980, e outra vez entre 1987 a 1993. Portanto, as empresas que são 100% baseadas em IA (OpenAI, DeepSeek, etc.) estão mais expostas às oscilações do mercado do que empresas que usam ou possuem parte dos seus produtos baseados em IA.  
+</p>
+<p>Talvez a lição que podemos tirar desta camada é que o mercado financeiro é um ecossistema complexo com inúmeros instrumentos para modelar o funcionamento do mercado com um todo. Um dos principais motores para injeção ou retirada de investimento em determinada empresa é a expectativa. Caso todos tenham uma alta expectativa para determinado produto ou empresa, rios de dinheiro vão ser injetados; e caso o contrário, rios de dinheiro serão retirados. E, o mercado de IA não é diferente disso. </p>
+
+<h2 id="governo">Governo</h2>
+<p>Sabemos que uma nação possui grandes poderes dentro de um determinado território. E, certas nações conseguem ter poderes e influências em níveis globais. Portanto, é uma força que não podemos ignorar quando falamos da economia de IA. Aqui, vamos entender como os governos impactam cada uma das camadas vistas anteriormente. 
+</p>
+<p>Dentro da pesquisa, o financiamento mais comum é financiamento governamental. As instituições de pesquisas mais tradicionais são as universidades (em grande parte públicas). A pesquisa de base (aquela que você não consegue enxergar uma aplicação clara na indústria) recebe mais de 50% de dinheiro governamental, e a pesquisa aplicada (aquela que a aplicação é clara) recebe em torno de 30% de dinheiro governamental. Então, de fato, o governo influencia diretamente o desenvolvimento de novas tecnologias de IA, formando cientistas e financiando suas pesquisas. E, tomando riscos de investimentos em pesquisas que podem não ter uma aplicação direta ou visível a curto e médio prazo (pesquisa de base), onde a IA se enquadrava nisso por um bom tempo (lembrando que o computador pessoal só surgiu nos anos 70). </p>
+<p>O governo também possui uma importância central no financiamento da indústria, por meio da oferta de créditos (BNDS, no Brasil). Como isso, ele consegue escolher quais indústrias fomentar ou quais desestimular. Por exemplo, o governo canadense criou um fundo para investir em empresas de IA. E, em geral, grande parte das empresas possuem certo nível de investimento governamental ou usam estruturas governamentais como uma forma de estratégia governamental. Neste caso, conseguimos observar maiores avanças na IA em governos que têm políticas de incentivo a este setor. 
+</p>
+<p>
+Talvez, onde o governo possui maior influência seja no mercado financeiro. Uma estratégia básica para o governo controlar a inflação é por meio do controle de juros (a famosa política monetária). Com juros altos, o mercado fica mais estagnado, onde os investidores tiram dinheiro do mercado e compram dívidas públicas visando um retorno sem grandes riscos. E, quando os juros estão baixos, mais barato é tomar empréstimos e investir no crescimento da indústria, tornando o mercado mais pujante. Estas mudanças influenciam indiretamente o mercado de IA, assim como o mercado no geral. 
+</p>
+<p>Outro fator importante é o poder dos governos sobre regulamentação da IA, podendo inibir parcialmente ou completamente certas tecnologias de IA. Possibilitando criar ferramentas que desaceleram o desenvolvimento de IA para benefício da população. Por exemplo, evitar uma brusca substituição de funções de trabalho, preservação de dados pessoais, etc. Porém, as medidas governamentais são tomadas de forma mais lenta. E o mercado de IA vem se apresentando muito dinâmico, capaz de contornar, mesmo que parcialmente, as possíveis regulamentações. Portanto, ao mesmo tempo que os governos incentivam a economia de IA também controlam o surgimento de certas tecnologias de IA. 
+</p>
 <section class="footnotes">
 <hr>
 <ol>
